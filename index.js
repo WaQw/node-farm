@@ -30,6 +30,24 @@ const url = require('url');
 
 ////////////////////////////
 // Server
+const replaceTemplate = (temp, product) => {
+    let output = temp.replace(/{%ProductName%}/g, product.productName); // regx
+    output = output.replace(/{%Image%}/g, product.image);
+    output = output.replace(/{%Quantity%}/g, product.quantity);
+    output = output.replace(/{%Price%}/g, product.price);
+    output = output.replace(/{%ID%}/g, product.id);
+    output = output.replace(/{%From%}/g, product.from);
+    output = output.replace(/{%Nutrients%}/g, product.nutrients);
+    output = output.replace(/{%Descriptions%}/g, product.description);
+    if(!product.organic) {
+        output = output.replace(/{%Not_Organic%}/g, 'not-organic');
+    }
+    return output;
+}
+
+const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8');
+const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
+const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
 
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const dataObj = JSON.parse(data);
@@ -39,15 +57,28 @@ const dataObj = JSON.parse(data);
 const server = http.createServer((req, res) => {
     // Routing
     const pathName = req.url;
+
+    // Overview Page
     if(pathName === '/' || pathName === '/overview') {
-        res.end('This is the OVERVIEW');
+        res.writeHead(200, {
+            'Content-type': 'text/html', // the browser is now expecting json
+        });
+        const cardsHtml = dataObj.map(el => replaceTemplate(tempCard, el)).join(''); // make it string
+        const output = tempOverview.replace('{%Product_Cards%}', cardsHtml);
+        res.end(output);
+
+    // Product Page
     } else if(pathName === '/product') {
         res.end('This is the PRODUCT');
+    
+    // API
     } else if(pathName === '/api') {
         res.writeHead(200, {
             'Content-type': 'application/json', // the browser is now expecting json
         });
         res.end(data);
+
+    // Not found
     } else {
         res.writeHead(404, {
             'Content-type': 'text/html', // the browser is now expecting html
