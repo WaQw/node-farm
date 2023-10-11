@@ -56,10 +56,10 @@ const dataObj = JSON.parse(data);
 // e.g. a request can be accessing the ip:port on browser
 const server = http.createServer((req, res) => {
     // Routing
-    const pathName = req.url;
+    const { query, pathname } = url.parse(req.url, true);
 
     // Overview Page
-    if(pathName === '/' || pathName === '/overview') {
+    if(pathname === '/' || pathname === '/overview') {
         res.writeHead(200, {
             'Content-type': 'text/html', // the browser is now expecting json
         });
@@ -68,11 +68,16 @@ const server = http.createServer((req, res) => {
         res.end(output);
 
     // Product Page
-    } else if(pathName === '/product') {
-        res.end('This is the PRODUCT');
+    } else if(pathname === '/product') {
+        const product = dataObj[query.id];
+        res.writeHead(200, {
+            'Content-type': 'text/html', // the browser is now expecting json
+        });
+        const output = replaceTemplate(tempProduct, product);
+        res.end(output);
     
     // API
-    } else if(pathName === '/api') {
+    } else if(pathname === '/api') {
         res.writeHead(200, {
             'Content-type': 'application/json', // the browser is now expecting json
         });
