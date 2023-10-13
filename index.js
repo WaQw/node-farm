@@ -1,6 +1,7 @@
 const fs = require('fs');
 const http = require('http');
 const url = require('url');
+const slugify = require('slugify');
 const replaceTemplate = require('./modules/replaceTemplates');
 
 ////////////////////////////
@@ -39,6 +40,8 @@ const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.htm
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const dataObj = JSON.parse(data);
 
+dataObj.map(el => el['slug'] = slugify(el.productName, { lower: true }));
+
 // each time a new request hits the server, the callback function is called
 // e.g. a request can be accessing the ip:port on browser
 const server = http.createServer((req, res) => {
@@ -55,11 +58,14 @@ const server = http.createServer((req, res) => {
         res.end(output);
 
     // Product Page
-    } else if(pathname === '/product') {
-        const product = dataObj[query.id];
+    } else if(pathname.includes('/product')) {
         res.writeHead(200, {
             'Content-type': 'text/html', // the browser is now expecting json
         });
+        const slug = pathname.replace('/product/','');
+        const product = dataObj.filter(el => {
+            return el.slug === slug;
+        })[0];
         const output = replaceTemplate(tempProduct, product);
         res.end(output);
     
