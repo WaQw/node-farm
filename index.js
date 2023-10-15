@@ -33,60 +33,70 @@ const replaceTemplate = require('./modules/replaceTemplates');
 ////////////////////////////
 // Server
 
-const tempOverview = fs.readFileSync(`${__dirname}/templates/template-overview.html`, 'utf-8');
-const tempCard = fs.readFileSync(`${__dirname}/templates/template-card.html`, 'utf-8');
-const tempProduct = fs.readFileSync(`${__dirname}/templates/template-product.html`, 'utf-8');
+const tempOverview = fs.readFileSync(
+  `${__dirname}/templates/template-overview.html`,
+  'utf-8'
+);
+const tempCard = fs.readFileSync(
+  `${__dirname}/templates/template-card.html`,
+  'utf-8'
+);
+const tempProduct = fs.readFileSync(
+  `${__dirname}/templates/template-product.html`,
+  'utf-8'
+);
 
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
 const dataObj = JSON.parse(data);
 
-dataObj.map(el => el['slug'] = slugify(el.productName, { lower: true }));
+dataObj.map((el) => (el['slug'] = slugify(el.productName, { lower: true })));
 
 // each time a new request hits the server, the callback function is called
 // e.g. a request can be accessing the ip:port on browser
 const server = http.createServer((req, res) => {
-    // Routing
-    const { query, pathname } = url.parse(req.url, true);
+  // Routing
+  const { query, pathname } = url.parse(req.url, true);
 
-    // Overview Page
-    if(pathname === '/' || pathname === '/overview') {
-        res.writeHead(200, {
-            'Content-type': 'text/html', // the browser is now expecting json
-        });
-        const cardsHtml = dataObj.map(el => replaceTemplate(tempCard, el)).join(''); // make it string
-        const output = tempOverview.replace('{%Product_Cards%}', cardsHtml);
-        res.end(output);
+  // Overview Page
+  if (pathname === '/' || pathname === '/overview') {
+    res.writeHead(200, {
+      'Content-type': 'text/html', // the browser is now expecting json
+    });
+    const cardsHtml = dataObj
+      .map((el) => replaceTemplate(tempCard, el))
+      .join(''); // make it string
+    const output = tempOverview.replace('{%Product_Cards%}', cardsHtml);
+    res.end(output);
 
     // Product Page
-    } else if(pathname.includes('/product')) {
-        res.writeHead(200, {
-            'Content-type': 'text/html', // the browser is now expecting json
-        });
-        const slug = pathname.replace('/product/','');
-        const product = dataObj.filter(el => {
-            return el.slug === slug;
-        })[0];
-        const output = replaceTemplate(tempProduct, product);
-        res.end(output);
-    
+  } else if (pathname.includes('/product')) {
+    res.writeHead(200, {
+      'Content-type': 'text/html', // the browser is now expecting json
+    });
+    const slug = pathname.replace('/product/', '');
+    const product = dataObj.filter((el) => {
+      return el.slug === slug;
+    })[0];
+    const output = replaceTemplate(tempProduct, product);
+    res.end(output);
+
     // API
-    } else if(pathname === '/api') {
-        res.writeHead(200, {
-            'Content-type': 'application/json', // the browser is now expecting json
-        });
-        res.end(data);
+  } else if (pathname === '/api') {
+    res.writeHead(200, {
+      'Content-type': 'application/json', // the browser is now expecting json
+    });
+    res.end(data);
 
     // Not found
-    } else {
-        res.writeHead(404, {
-            'Content-type': 'text/html', // the browser is now expecting html
-            'my-own-header': 'angela-created'
-        });
-        res.end('<h1>Page not found!</h1>');
-    }
+  } else {
+    res.writeHead(404, {
+      'Content-type': 'text/html', // the browser is now expecting html
+      'my-own-header': 'angela-created',
+    });
+    res.end('<h1>Page not found!</h1>');
+  }
 });
 
 server.listen(8000, '127.0.0.1', () => {
-    console.log('Listening to requests on port 8000');
+  console.log('Listening to requests on port 8000');
 });
-
